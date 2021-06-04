@@ -8,12 +8,10 @@ import arrow.core.right
 import arrow.syntax.function.partially2
 import com.urielsalis.mccrashlib.Crash
 import com.urielsalis.mccrashlib.CrashReader
-import com.urielsalis.mccrashlib.deobfuscator.getSafeChildPath
 import io.github.mojira.arisa.domain.CommentOptions
 import io.github.mojira.arisa.domain.Issue
 import io.github.mojira.arisa.infrastructure.AttachmentUtils
 import io.github.mojira.arisa.infrastructure.config.CrashDupeConfig
-import java.nio.file.Files
 import java.time.Instant
 
 class CrashModule(
@@ -30,8 +28,7 @@ class CrashModule(
 
             val crashes = AttachmentUtils(crashReportExtensions, crashReader).extractCrashesFromAttachments(issue)
 
-            val newCrashes = assertContainsNewCrash(crashes, lastRun).bind()
-            uploadDeobfuscatedCrashes(issue, newCrashes)
+            assertContainsNewCrash(crashes, lastRun).bind()
             assertNoValidCrash(crashes).bind()
 
             val key = crashes
@@ -49,36 +46,6 @@ class CrashModule(
             }
         }
     }
-
-    private fun uploadDeobfuscatedCrashes(issue: Issue, crashes: List<Pair<AttachmentUtils.TextDocument, Crash>>) {
-        val minecraftCrashesWithDeobf = crashes
-            .map { it.first.name to it.second }
-            .filter { it.second is Crash.Minecraft }
-            .map { it.first to (it.second as Crash.Minecraft).deobf }
-            .filter { it.second != null }
-            .filterNot {
-                issue.attachments.any { attachment ->
-                    attachment.name == getDeobfName(it.first) || attachment.name.endsWith(
-                        "deobfuscated.txt"
-                    )
-                }
-            }
-        minecraftCrashesWithDeobf.forEach {
-            val tempDir = Files.createTempDirectory("arisa-crash-upload").toFile()
-            val safePath = getSafeChildPath(tempDir, getDeobfName(it.first))
-            if (safePath == null) {
-                tempDir.delete()
-            } else {
-                safePath.writeText(it.second!!)
-                issue.addAttachment(safePath) {
-                    // Once uploaded, delete the temp directory containing the crash report
-                    tempDir.deleteRecursively()
-                }
-            }
-        }
-    }
-
-    private fun getDeobfName(name: String): String = "${name.substringBeforeLast(".")}-deobfuscated.txt"
 
     /**
      * Checks whether an analyzed crash report matches any of the specified known crash issues.

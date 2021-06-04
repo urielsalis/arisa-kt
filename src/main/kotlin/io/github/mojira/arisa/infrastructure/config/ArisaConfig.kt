@@ -305,6 +305,12 @@ object Arisa : ConfigSpec() {
             )
         }
 
+        object CrashInfo : ModuleConfigSpec() {
+            val crashExtensions by required<List<String>>(
+                description = "File extensions that should be checked for crash reports."
+            )
+        }
+
         object RevokeConfirmation : ModuleConfigSpec()
 
         object KeepPrivate : ModuleConfigSpec() {
