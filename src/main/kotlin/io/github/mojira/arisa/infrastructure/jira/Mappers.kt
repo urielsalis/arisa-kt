@@ -187,6 +187,7 @@ fun JiraComment.toDomain(
 ): Comment {
     val context = issue.getUpdateContext(jiraClient)
     return Comment(
+        id,
         body,
         author.toDomain(jiraClient, config),
         { getGroups(jiraClient, author.name).fold({ null }, { it }) },
@@ -256,7 +257,14 @@ fun JiraIssueLink.toDomain(
     ::deleteLink.partially1(issue.getUpdateContext(jiraClient)).partially1(this)
 )
 
-fun JiraChangeLogItem.toDomain(jiraClient: JiraClient, entry: JiraChangeLogEntry, config: Config) = ChangeLogItem(
+fun JiraChangeLogItem.toDomain(
+    jiraClient: JiraClient,
+    entry: JiraChangeLogEntry,
+    itemIndex: Int,
+    config: Config
+) = ChangeLogItem(
+    entry.id,
+    itemIndex,
     entry.created.toInstant(),
     field,
     from,
@@ -289,8 +297,8 @@ private fun JiraIssue.mapFixVersions() =
 
 private fun JiraIssue.getChangeLogEntries(jiraClient: JiraClient, config: Config) =
     changeLog.entries.flatMap { e ->
-        e.items.map { i ->
-            i.toDomain(jiraClient, e, config)
+        e.items.mapIndexed { index, item ->
+            item.toDomain(jiraClient, e, index, config)
         }
     }
 

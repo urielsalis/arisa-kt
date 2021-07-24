@@ -40,6 +40,8 @@ fun mockAttachment(
 )
 
 fun mockChangeLogItem(
+    entryId: String = "1",
+    itemIndex: Int = 0,
     created: Instant = RIGHT_NOW,
     field: String = "",
     changedFrom: String? = null,
@@ -49,6 +51,8 @@ fun mockChangeLogItem(
     author: User = mockUser(),
     getAuthorGroups: () -> List<String>? = { emptyList() }
 ) = ChangeLogItem(
+    entryId,
+    itemIndex,
     created,
     field,
     changedFrom,
@@ -60,6 +64,7 @@ fun mockChangeLogItem(
 )
 
 fun mockComment(
+    id: String = "1",
     body: String = "",
     author: User = mockUser(),
     getAuthorGroups: () -> List<String> = { emptyList() },
@@ -70,6 +75,7 @@ fun mockComment(
     restrict: (String) -> Unit = { },
     update: (String) -> Unit = { }
 ) = Comment(
+    id,
     body,
     author,
     getAuthorGroups,
